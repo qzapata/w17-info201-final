@@ -14,8 +14,8 @@ shinyUI(fluidPage(
     
     # creates main panel for data
     mainPanel(
-      tabsetPanel(
-        
+      tabsetPanel(type='tabs',
+                  
       )
     )
   )
