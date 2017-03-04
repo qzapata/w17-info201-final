@@ -1,5 +1,6 @@
 # import libraries
 library('shiny')
+library('plotly')
 
 # imports data set
 persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
@@ -17,21 +18,22 @@ shinyUI(fluidPage(
   # creates multi-column layout
   sidebarLayout(
     sidebarPanel(
-      selectInput('year.choice', label='Year', choice=rev(years)),
-      selectInput('purpose.choice', label='Relation', choice=list('Taking in'='Country...territory.of.asylum.residence',
-                                                                  'Fleeing'='Origin')),
-      checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
-                         selected=pop.types),
-      selectInput('map.type', label='Map Type', choice=list('Color'='color.map.plot', 
-                                                            'Line'='line.map.plot')),       
-      selectInput('country.choice', label='Country', choice=c('All', country.names))
+      conditionalPanel(
+        condition='input.type == "color.map.plot"',
+        selectInput('year.choice', label='Year', choice=rev(years)),
+        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
+                           selected=pop.types),
+        selectInput('country.choice', label='Country', choice=c('All', country.names))
+      ),
+      selectInput('type', label='Map Type', choice=list('Color'='color.map.plot', 
+                                                            'Line'='line.map.plot'))       
     ),
     
     # creates main panel for data
     mainPanel(
       tabsetPanel(type='tabs',
             tabPanel('Map',
-                     plotOutput('map.plot'))
+                     plotlyOutput('map.plot'))
                      #textOutput('map.text'))      
       )
     )
