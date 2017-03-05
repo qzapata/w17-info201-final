@@ -18,13 +18,20 @@ shinyUI(fluidPage(
   # creates multi-column layout
   sidebarLayout(
     sidebarPanel(
+      # universal panels
+      selectInput('year.choice', label='Year', choice=rev(years)),
+      checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
+                         selected=pop.types),
+      
+      # line plot panels
       conditionalPanel(
-        condition='input.type == "color.map.plot"',
-        selectInput('year.choice', label='Year', choice=rev(years)),
-        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
-                           selected=pop.types),
-        selectInput('country.choice', label='Country', choice=c('All', country.names))
+        condition='input.type == "line.map.plot"',
+        selectInput('country.choice', label='Country', choice=c('All', country.names), selected=country.names[1]),
+        selectInput('direction.choice', label='Purpose', 
+                    choice=list('Fleeing'='ISO3.residence', 'Accepting'='ISO3.origin'))
       ),
+      
+      # filter plot
       selectInput('type', label='Map Type', choice=list('Color'='color.map.plot', 
                                                             'Line'='line.map.plot'))       
     ),
@@ -33,8 +40,8 @@ shinyUI(fluidPage(
     mainPanel(
       tabsetPanel(type='tabs',
             tabPanel('Map',
-                     plotlyOutput('map.plot'))
-                     #textOutput('map.text'))      
+                     plotlyOutput('map.plot'),
+                     verbatimTextOutput('click.text'))
       )
     )
   )
