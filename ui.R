@@ -18,30 +18,38 @@ shinyUI(fluidPage(
   # creates multi-column layout
   sidebarLayout(
     sidebarPanel(
-      # universal panels
-      selectInput('year.choice', label='Year', choice=rev(years)),
-      checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
-                         selected=pop.types),
-      
-      # line plot panels
       conditionalPanel(
+        condition='input.tabPanel=="Map"',
+        # universal panels
+        selectInput('year.choice', label='Year', choice=rev(years)),
+        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
+                           selected=pop.types),
+        conditionalPanel(
+          condition='input.type == "color.map.plot"',
+          selectInput('direction.choice.color', label='Purpose', 
+                      choice=list('Fleeing'='ISO3.origin', 'Residing'='ISO3.residence'))),
+                       
+        # line plot panels
+        conditionalPanel(
         condition='input.type == "line.map.plot"',
-        selectInput('country.choice', label='Country', choice=c('All', country.names), selected=country.names[1]),
-        selectInput('direction.choice', label='Purpose', 
-                    choice=list('Fleeing'='ISO3.residence', 'Accepting'='ISO3.origin'))
-      ),
-      
-      # filter plot
-      selectInput('type', label='Map Type', choice=list('Color'='color.map.plot', 
-                                                            'Line'='line.map.plot'))       
+        selectInput('direction.choice.line', label='Purpose', 
+                    choice=list('Fleeing'='ISO3.residence', 'Residing'='ISO3.origin')),
+        selectInput('country.choice', label='Country', choice=c('All', country.names), selected=country.names[1])),
+                       
+        # filter plot
+        selectInput('type', label='Map Type', choice=list('Color'='color.map.plot',
+                                                          'Line'='line.map.plot'))
+      )
     ),
     
     # creates main panel for data
     mainPanel(
-      tabsetPanel(type='tabs',
+      tabsetPanel(type='tabs', id='tabPanel',
             tabPanel('Map',
                      plotlyOutput('map.plot'),
-                     verbatimTextOutput('click.text'))
+                     textOutput('map.description'),
+                     conditionalPanel(condition='input.type == "color.map.plot"',
+                                      verbatimTextOutput('click.text')))
       )
     )
   )

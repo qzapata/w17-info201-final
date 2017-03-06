@@ -16,6 +16,10 @@ persons.data <- filter(persons.data, Year != '2014')
 persons.data$Value <- sapply(persons.data$Value, as.numeric)
 
 shinyServer(function(input, output) {
+  #data frame to print country breakdown
+  breakdown <- reactiveValues()
+  breakdown$df <- ''
+  
   # renders the plot the user requests
   output$map.plot <- renderPlotly({
     if(input$type == 'color.map.plot') {
@@ -34,7 +38,7 @@ shinyServer(function(input, output) {
              ISO3.origin = iso.alpha(.$Origin, n=3)) 
     
     if (input$type == 'line.map.plot' & input$country.choice != 'All') {
-      if (input$direction.choice == 'ISO3.origin'){
+      if (input$direction.choice.line == 'ISO3.origin') {
         data <- filter(data, Country...territory.of.asylum.residence == input$country.choice)
       } else {
         data <- filter(data, Origin == input$country.choice)
@@ -45,19 +49,39 @@ shinyServer(function(input, output) {
 
   # creates click event data text 
   output$click.text <- renderPrint({
-    cat('Country data:', '\n')
+    # data for clicked country
     d <- event_data("plotly_click")
-    if (is.null(d)) "Click on a country to view intake breakdown" else d
+    
+    # prints usability or selected data
+    if (is.null(d)) {
+      cat("Click on a country to view country breakdown")
+    } else {
+      selected <- breakdown$df[d$pointNumber+1,]
+      cat(ifelse(input$direction.choice.color == 'ISO3.residence','Fleeing  ', 'Residing '), 
+          'data for ', levels(selected$NAME)[selected$NAME],':\n', selected$origin.all, sep="")
+    }
   })
   
   # creates color map view
   color.map.plot <- reactive({
     # filter data for graph
     world.map <- map.filter() %>%
-      group_by(ISO3.residence) %>% 
-      summarise(origin.all=paste0(Origin, ': ', Value, collapse="\n"), total=sum(Value)) %>%  
-      left_join(world, by=c('ISO3.residence'='ISO3'))
-      
+      group_by_(input$direction.choice.color) %>% 
+      summarise(origin.all=ifelse(input$direction.choice.color == 'ISO3.residence',
+                                  paste0(Origin, ': ', Value, collapse="\n"),
+                                  paste0(Country...territory.of.asylum.residence, ': ', Value, collapse="\n")), 
+                total=sum(Value)) 
+    
+    # renames columns for join
+    colnames(world.map)[1] <- 'ISO3'
+    
+    # join and filter areas too small to plot 
+    world.map <- left_join(world.map, world) %>% 
+      filter(AREA > 100)
+    
+    # stores data frame to reactive var
+    breakdown$df <- world.map
+    
     # specify map projection/options
     g <- list(showframe = TRUE,
       showcoastlines = TRUE,
@@ -65,7 +89,8 @@ shinyServer(function(input, output) {
       
     map <- plot_geo(world.map) %>% 
       config(displayModeBar=FALSE) %>% 
-      add_trace(z=~total, color=~total, colors='Blues', text=~total, locations=~ISO3.residence, marker=list(line=1)) %>% 
+      add_trace(z=~total, color=~total, colors='Blues', text=~NAME, 
+                locations=~ISO3, marker=list(line=1)) %>% 
       colorbar(title='Displaced People') %>% 
       layout(title=paste('Displaced persons', input$year.choice), geo=g)
     
@@ -76,7 +101,7 @@ shinyServer(function(input, output) {
   line.map.plot <- reactive({
     # modify data set
     world.map <- map.filter() %>% 
-      group_by_(input$direction.choice) %>% 
+      group_by_(input$direction.choice.line) %>% 
       summarise(sum = sum(Value)) %>% 
       left_join(map.filter())
     
@@ -94,6 +119,9 @@ shinyServer(function(input, output) {
       filter(ISO3.origin != ISO3.residence) %>% 
       mutate(id = seq_len(nrow(.)))
     
+    # stores world.data in reactive variable
+    breakdown$df <- world.map
+    
     # specify map projection/options
     g <- list(showframe = TRUE,
               showcoastlines = TRUE,
@@ -105,16 +133,58 @@ shinyServer(function(input, output) {
       add_segments(data=group_by(world.map, id), 
                    x=~LON.y, xend=~LON.x,
                    y=~LAT.y, yend=~LAT.x,
-                   text=~Origin, type='scattermapbox',
-                   size=I(1), hoverinfo='none', color=~Origin,
-                   alpha=ifelse(input$direction.choice == 'ISO3.residence', 0.3, 1))
+                   text=~Origin, split=~id,
+                   size=I(1), hoverinfo='text', color=~Origin,
+                   alpha=ifelse(input$direction.choice.line == 'ISO3.residence', 0.3, 1))
     
-    if (input$direction.choice == 'ISO3.residence') {
+    if (input$direction.choice.line == 'ISO3.residence') {
       map <- map %>% 
         add_markers(data=world.map, x=~LON.x, y=~LAT.x, text=~NAME.x,
                     size=~Value, hoverinfo='text', alpha=0.5)
     }
-    
+
     return(map)  
+  })
+  
+  output$map.description <- renderPrint({
+    # var to see what type of direction should choose from
+    type <- ifelse(input$type=='color.map.plot', TRUE, FALSE)
+    direc <- ifelse(type,
+           ifelse(input$direction.choice.color=='ISO3.residence', 
+                  TRUE, FALSE),
+           ifelse(input$direction.choice.line=='ISO3.residence', 
+                  FALSE, TRUE))
+    
+    # stat variables for data based on line or color view
+    View(breakdown$df)
+    if (type) {
+      country.max.var <- breakdown$df[which(breakdown$df$total == max(breakdown$df$total)),]$NAME
+      country.max <- levels(country.max.var)[country.max.var]
+      country.min.var <- breakdown$df[which(breakdown$df$total == min(breakdown$df$total)),]$NAME
+      country.min <- levels(country.min.var)[country.min.var]
+    } else {
+      country.max.var <- breakdown$df[which(breakdown$df$Value == max(breakdown$df$Value)),]
+      country.max <- ifelse(direc,
+                            levels(country.max.var$NAME.y)[country.max.var$NAME.y],
+                            levels(country.max.var$NAME.x)[country.max.var$NAME.x])
+      country.min.var <- breakdown$df[which(breakdown$df$Value == min(breakdown$df$Value)),]
+      country.min <- ifelse(direc,
+                            levels(country.min.var$NAME.y)[country.min.var$NAME.y],
+                            levels(country.min.var$NAME.x)[country.min.var$NAME.x])
+      
+      country.max.status <- tolower(country.max.var$Population.type)
+      country.min.status <- tolower(country.min.var$Population.type)
+    }
+    
+    # print statement
+    cat('The map above is a ', ifelse(type, 'choropleth ', 'line '), 'map depicting data on displaced
+        people, and what country they ', ifelse(direc, 'reside in', 'fled from'), ' for the year ', input$year.choice,
+        '. ',
+        ifelse(!type, paste('The map shows data for people ', ifelse(direc, 'from ', 'in '), input$country.choice,
+                            '. '), ''),
+        'Most displaced people ', ifelse(direc, 'flee from ', 'flee to '), country.max, 
+        ifelse(type, '', paste0(' with the status ', country.max.status)), ', and the least amount of people ', 
+        ifelse(direc, 'flee from ', 'flee to '), country.min, 
+        ifelse(type, '', paste0(' with the the status ', country.min.status)), '.', sep="")
   })
 })
