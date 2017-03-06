@@ -68,8 +68,9 @@ shinyServer(function(input, output) {
     world.map <- map.filter() %>%
       group_by_(input$direction.choice.color) %>% 
       summarise(origin.all=ifelse(input$direction.choice.color == 'ISO3.residence',
-                                  paste0(Origin, ': ', Value, collapse="\n"),
-                                  paste0(Country...territory.of.asylum.residence, ': ', Value, collapse="\n")), 
+                                  paste0(Origin, ': ', Value, ' - ', Population.type, collapse="\n"),
+                                  paste0(Country...territory.of.asylum.residence, ': ', Value, ' (', 
+                                         Population.type, ')', collapse="\n")), 
                 total=sum(Value)) 
     
     # renames columns for join
@@ -156,7 +157,6 @@ shinyServer(function(input, output) {
                   FALSE, TRUE))
     
     # stat variables for data based on line or color view
-    View(breakdown$df)
     if (type) {
       country.max.var <- breakdown$df[which(breakdown$df$total == max(breakdown$df$total)),]$NAME
       country.max <- levels(country.max.var)[country.max.var]
