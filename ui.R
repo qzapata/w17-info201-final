@@ -5,8 +5,8 @@ library('plotly')
 # imports data set
 persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
 
-# varaibles to speed up load time
-years <- 1951:2013
+# varaibles to speed up load time -- some years excluded because too little data available
+years <- 1960:2013
 pop.types <- levels(persons.data$Population.type)
 country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 

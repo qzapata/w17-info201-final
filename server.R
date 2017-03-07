@@ -37,6 +37,7 @@ shinyServer(function(input, output) {
       mutate(ISO3.residence = iso.alpha(.$Country...territory.of.asylum.residence, n=3),
              ISO3.origin = iso.alpha(.$Origin, n=3)) 
     
+    # filters data based on country selected if option is avaliable
     if (input$type == 'line.map.plot' & input$country.choice != 'All') {
       if (input$direction.choice.line == 'ISO3.origin') {
         data <- filter(data, Country...territory.of.asylum.residence == input$country.choice)
@@ -54,7 +55,7 @@ shinyServer(function(input, output) {
     
     # prints usability or selected data
     if (is.null(d)) {
-      cat("Click on a country to view country breakdown")
+      cat("Click on a country to view breakdown")
     } else {
       selected <- breakdown$df[d$pointNumber+1,]
       cat(ifelse(input$direction.choice.color == 'ISO3.residence','Fleeing  ', 'Residing '), 
@@ -88,6 +89,7 @@ shinyServer(function(input, output) {
       showcoastlines = TRUE,
       projection = list(type = 'Mercator'))
       
+    # creates map to display
     map <- plot_geo(world.map) %>% 
       config(displayModeBar=FALSE) %>% 
       add_trace(z=~total, color=~total, colors='Blues', text=~NAME, 
@@ -104,7 +106,7 @@ shinyServer(function(input, output) {
     world.map <- map.filter() %>% 
       group_by_(input$direction.choice.line) %>% 
       summarise(sum = sum(Value)) %>% 
-      left_join(map.filter())
+      left_join(map.filter()) 
     
     # create two data frames to get both x and y coords
     world.map.residence <- world.map %>% 
@@ -128,6 +130,7 @@ shinyServer(function(input, output) {
               showcoastlines = TRUE,
               projection = list(type = 'Mercator'))
     
+    # creates map to display
     map <- plot_geo() %>% 
       config(displayModeBar=FALSE) %>% 
       layout(title=paste('Displaced persons', input$year.choice), geo=g, showlegend=FALSE) %>% 
@@ -138,6 +141,7 @@ shinyServer(function(input, output) {
                    size=I(1), hoverinfo='text', color=~Origin,
                    alpha=ifelse(input$direction.choice.line == 'ISO3.residence', 0.3, 1))
     
+    # adds circles based on population density if appropriate view
     if (input$direction.choice.line == 'ISO3.residence') {
       map <- map %>% 
         add_markers(data=world.map, x=~LON.x, y=~LAT.x, text=~NAME.x,
@@ -147,6 +151,7 @@ shinyServer(function(input, output) {
     return(map)  
   })
   
+  # output render for map description/accessibility
   output$map.description <- renderPrint({
     # var to see what type of direction should choose from
     type <- ifelse(input$type=='color.map.plot', TRUE, FALSE)
