@@ -15,6 +15,10 @@ world <- data.frame(wrld_simpl)
 persons.data <- filter(persons.data, Year != '2014')
 persons.data$Value <- sapply(persons.data$Value, as.numeric)
 
+# removes 2014 and convert value col to numeric
+persons.data <- filter(persons.data, Year != '2014')
+persons.data$Value <- sapply(persons.data$Value, as.numeric)
+
 shinyServer(function(input, output) {
   #data frame to print country breakdown
   breakdown <- reactiveValues()
@@ -191,5 +195,43 @@ shinyServer(function(input, output) {
         ifelse(type, '', paste0(' with the status ', country.max.status)), ', and the least amount of people ', 
         ifelse(direc, 'flee from ', 'flee to '), country.min, 
         ifelse(type, '', paste0(' with the the status ', country.min.status)), '.', sep="")
+  })
+  
+  # Creates filtered data frame as reactive variable
+  filtered.data <- reactive ({
+    persons.filtered <- 
+      if (input$table.type == "Residence") {
+        filter(persons.data, Country...territory.of.asylum.residence == input$country.choice)
+      } else {
+        filter(persons.data, Origin == input$country.choice) 
+      }
+    if (input$year.choice != "All") {
+      persons.filtered <- filter(persons.filtered, Year == input$year.choice)
+    }
+    persons.filtered <- filter(persons.filtered, Population.type %in% input$type.of.displacement) %>%
+                        arrange(desc(Value))
+    if(nrow(persons.filtered) > input$row.num) {
+      persons.filtered <- persons.filtered[0:input$row.num,]
+    }
+    return(persons.filtered)
+  })
+  
+  # Creates table of the top countries where people are either going to or coming from.
+  output$table <- renderTable({
+    if(nrow(filtered.data()) == 0) {
+      return()
+    } else {
+      table.data <- filtered.data()
+      table.data$Value <- format(table.data$Value,big.mark=",",scientific=FALSE)
+      colnames(table.data) <- c("Year", "Country of Residence", "Origin","Type of Displacement", "Number of People")
+    return(table.data)
+    }
+  })
+  
+  # Message letitng the user know that there are no values found.
+  output$text <- renderText({
+    if(nrow(filtered.data()) == 0) {
+      return("No data found for the active filters.")
+    }
   })
 })
