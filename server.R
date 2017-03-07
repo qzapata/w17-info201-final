@@ -79,7 +79,7 @@ shinyServer(function(input, output) {
     
     # join and filter areas too small to plot 
     world.map <- left_join(world.map, world) %>% 
-      filter(AREA > 100)
+      filter(AREA > 500)
     
     # stores data frame to reactive var
     breakdown$df <- world.map
@@ -144,7 +144,7 @@ shinyServer(function(input, output) {
     # adds circles based on population density if appropriate view
     if (input$direction.choice.line == 'ISO3.residence') {
       map <- map %>% 
-        add_markers(data=world.map, x=~LON.x, y=~LAT.x, text=~NAME.x,
+        add_markers(data=world.map, x=~LON.x, y=~LAT.x, text=~paste0(NAME.x, ': ', Value),
                     size=~Value, hoverinfo='text', alpha=0.5)
     }
 
@@ -153,7 +153,7 @@ shinyServer(function(input, output) {
   
   # output render for map description/accessibility
   output$map.description <- renderPrint({
-    # var to see what type of direction should choose from
+    # var to see what type of direction should choose from -- total and value are inverse of eachother
     type <- ifelse(input$type=='color.map.plot', TRUE, FALSE)
     direc <- ifelse(type,
            ifelse(input$direction.choice.color=='ISO3.residence', 
