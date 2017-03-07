@@ -5,6 +5,6 @@ Please be sure to pick some part of the assignment you can do realistically with
 Section everyone is working on:
 > Quinn: Map, refactoring code
 
-> Clayton:
+> Clayton: Table, Introduction, CSS
 
-> Victoria:Graphs Organizing data frame etc?
+> Victoria:Graphs 
