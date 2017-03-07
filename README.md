@@ -7,4 +7,4 @@ Section everyone is working on:
 
 > Clayton:
 
-> Victoria:Graphs Organizing data frame etc?
+> Victoria:Graphs
