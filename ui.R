@@ -17,8 +17,8 @@ shinyUI(fluidPage(
   # creates multi-column layout
   sidebarLayout(
     sidebarPanel(
-      # universal panels
- #     selectInput('year.choice', label='Year', choice=rev(years)),
+      conditionalPanel(
+        condition='input.tabPanel == "Graph"',
       checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types,
                          selected=pop.types[1]),
       selectInput('direction.choice', label='Purpose', 
@@ -27,12 +27,13 @@ shinyUI(fluidPage(
                   choice=c('All', country.names), selected=country.names[1]),
       hr(),
       helpText("Data from UNHCR")
+      )
     ),
     
     # creates main panel for data
     mainPanel(
-      tabsetPanel(type='tabs',
-                  tabPanel('Line Graph', hr(), dygraphOutput("dygraph"))
+      tabsetPanel(type='tabs', id = 'tabPanel',
+                  tabPanel('Graph', hr(), dygraphOutput("dygraph"))
     )    
     )
  
