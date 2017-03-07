@@ -1,5 +1,14 @@
 # import libraries
 library('shiny')
+library('plotly')
+library('dygraphs')
+
+# import data
+persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
+
+# Variables for tab
+pop.types <- levels(persons.data$Population.type)
+country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 
 
 # import data set
@@ -19,6 +28,16 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       conditionalPanel(
+        condition='input.tabPanel == "Graph"',
+        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types,
+                           selected=pop.types[1]),
+        selectInput('direction.choice', label='Purpose', 
+                    choice=list('Fleeing'='ISO3.residence', 'Accepting'='ISO3.origin')),
+        selectInput('country.choice', label='Country', 
+                    choice=c('All', country.names), selected=country.names[1]),
+        hr(),
+        helpText("Data from UNHCR")),
+      conditionalPanel(
         condition='input.tabPanel=="Table"',
         selectInput('country.choice', label='Country', choice=c(country.names), selected=country.names[1]),
         selectInput('year.choice', label='Year', choice=c("All",rev(years))),
@@ -27,8 +46,7 @@ shinyUI(fluidPage(
         radioButtons("table.type", "Table Information:", c("Origin","Residence")),
         numericInput('row.num', label = 'Max Rows', value = 10, min = 0)
       )
-    )
-    ,
+    ),
     
     # creates main panel for data
     mainPanel(
@@ -47,8 +65,10 @@ shinyUI(fluidPage(
                p(" The following table includes information about where displaced persons are going and where they are coming from, arranged descendingly
                  according to the number of people displaced:"),
                textOutput('text'),
-               tableOutput('table')
-               )
+               tableOutput('table')),
+      tabPanel('Graph', 
+               hr(), 
+               dygraphOutput("dygraph"))
       )
     )
   )
