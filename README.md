@@ -7,4 +7,5 @@ Section everyone is working on:
 
 > Clayton: Table, Introduction, CSS
 
-> Victoria:Graphs 
+
+> Victoria:Graphs
