@@ -13,7 +13,6 @@ persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv', 
 persons.data <- filter(persons.data, Year != '2014')
 persons.data$Value <- sapply(persons.data$Value, as.numeric)
 
-
 shinyServer(function(input, output) {
   
   # create filtered data for line graph
@@ -41,8 +40,42 @@ shinyServer(function(input, output) {
           dyRangeSelector() %>%
           dyOptions(stepPlot = TRUE)
   })
-    
-})
-    
   
-
+  # Creates filtered data frame as reactive variable
+  filtered.data <- reactive ({
+    persons.filtered <- 
+      if (input$table.type == "Residence") {
+        filter(persons.data, Country...territory.of.asylum.residence == input$country.choice)
+      } else {
+        filter(persons.data, Origin == input$country.choice) 
+      }
+    if (input$year.choice != "All") {
+      persons.filtered <- filter(persons.filtered, Year == input$year.choice)
+    }
+    persons.filtered <- filter(persons.filtered, Population.type %in% input$type.of.displacement) %>%
+                        arrange(desc(Value))
+    if(nrow(persons.filtered) > input$row.num) {
+      persons.filtered <- persons.filtered[0:input$row.num,]
+    }
+    return(persons.filtered)
+  })
+  
+  # Creates table of the top countries where people are either going to or coming from.
+  output$table <- renderTable({
+    if(nrow(filtered.data()) == 0) {
+      return()
+    } else {
+      table.data <- filtered.data()
+      table.data$Value <- format(table.data$Value,big.mark=",",scientific=FALSE)
+      colnames(table.data) <- c("Year", "Country of Residence", "Origin","Type of Displacement", "Number of People")
+    return(table.data)
+    }
+  })
+  
+  # Message letitng the user know that there are no values found.
+  output$text <- renderText({
+    if(nrow(filtered.data()) == 0) {
+      return("No data found for the active filters.")
+    }
+  })
+})
