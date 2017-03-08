@@ -1,21 +1,13 @@
 # import libraries
 library('shiny')
 library('plotly')
+library('dygraphs')
 
 # imports data set
 persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
 
-# varaibles to speed up load time -- some years excluded because too little data available
+# variables to use -- some years excluded because too little data available
 years <- 1960:2013
-pop.types <- levels(persons.data$Population.type)
-country.names <- levels(persons.data$Country...territory.of.asylum.residence)
-
-
-# import data set
-persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
-
-# variables to use
-years <- 1951:2013
 pop.types <- levels(persons.data$Population.type)
 country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 
@@ -27,6 +19,7 @@ shinyUI(fluidPage(
   # creates multi-column layout
   sidebarLayout(
     sidebarPanel(
+      # shows interactive fitlers for map
       conditionalPanel(
         condition='input.tabPanel=="Map"',
         # universal panels
@@ -49,6 +42,21 @@ shinyUI(fluidPage(
           selectInput('type', label='Map Type', choice=list('Color'='color.map.plot',
                                                           'Line'='line.map.plot'))
       ),
+      
+      # shows interactive fitlers for graph
+      conditionalPanel(
+        condition='input.tabPanel == "Graph"',
+        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types,
+                           selected=pop.types[1]),
+        selectInput('direction.choice', label='Purpose', 
+                    choice=list('Fleeing'='ISO3.residence', 'Accepting'='ISO3.origin')),
+        selectInput('country.choice', label='Country', 
+                    choice=c('All', country.names), selected=country.names[1]),
+        hr(),
+        helpText("Data from UNHCR")
+      ),
+      
+      # shows interactive fitlers for table
       conditionalPanel(
         condition='input.tabPanel=="Table"',
         selectInput('country.choice', label='Country', choice=c(country.names), selected=country.names[1]),
@@ -72,16 +80,19 @@ shinyUI(fluidPage(
                                   br("The data used in this application is from the United Nations Refugee Agency. UNHCR originally collected this data while helping on
                                      refugees, asylum-seekers, and people who are displaced since 1951. The data collects data based
                                      on about 200 countries both as destinations and origins for displaced people. ")),
-      tabPanel('Table',
-               p(" The following table includes information about where displaced persons are going and where they are coming from, arranged descendingly
-                 according to the number of people displaced:"),
-               textOutput('text'),
-               tableOutput('table')),
-      tabPanel('Map',
-               plotlyOutput('map.plot'),
-               textOutput('map.description'),
-               conditionalPanel(condition='input.type == "color.map.plot"',
-                                verbatimTextOutput('click.text')))
+        tabPanel('Map',
+                 plotlyOutput('map.plot'),
+                 textOutput('map.description'),
+                 conditionalPanel(condition='input.type == "color.map.plot"',
+                                  verbatimTextOutput('click.text'))),
+        tabPanel('Table',
+                 p(" The following table includes information about where displaced persons are going and where they are coming from, arranged descendingly
+                   according to the number of people displaced:"),
+                 textOutput('text'),
+                 tableOutput('table')),
+        tabPanel('Graph', 
+                 hr(), 
+                 dygraphOutput("dygraph"))
       )
     )
   )
