@@ -13,7 +13,7 @@ country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 
 # predefines common filters
 country.filter <- function(id) {selectInput(id, label='Country', 
-                              choice=c('All', country.names), selected=country.names[1])
+                              choice=c(country.names), selected=country.names[1])
                   }
 displacement.filter <- function(id) {checkboxGroupInput(id, label='Type of Displacement', 
                                           choice=pop.types, selected=pop.types)
