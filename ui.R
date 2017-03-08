@@ -123,6 +123,9 @@ shinyUI(fluidPage(
                  textOutput('text'),
                  tableOutput('table')),
         tabPanel('Graph', 
+                 hr(),
+                 p("The following line graph is about displacement population for type or types of displacement, 
+                 purpose, specific country and time range."),
                  hr(), 
                  dygraphOutput("dygraph"))
       )
