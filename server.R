@@ -44,7 +44,7 @@ shinyServer(function(input, output) {
     
     # filters data based on country selected if option is avaliable
     if (input$type == 'line.map.plot' & input$country.choice != 'All') {
-      if (input$direction.choice.line == 'ISO3.origin') {
+      if (input$direction.choice == 'ISO3.origin') {
         data <- filter(data, Country...territory.of.asylum.residence == input$country.choice)
       } else {
         data <- filter(data, Origin == input$country.choice)
@@ -109,7 +109,7 @@ shinyServer(function(input, output) {
   line.map.plot <- reactive({
     # modify data set
     world.map <- map.filter() %>% 
-      group_by_(input$direction.choice.line) %>% 
+      group_by_(input$direction.choice) %>% 
       summarise(sum = sum(Value)) %>% 
       left_join(map.filter()) 
     
@@ -144,10 +144,10 @@ shinyServer(function(input, output) {
                    y=~LAT.y, yend=~LAT.x,
                    text=~Origin, split=~id,
                    size=I(1), hoverinfo='text', color=~Origin,
-                   alpha=ifelse(input$direction.choice.line == 'ISO3.residence', 0.3, 1))
+                   alpha=ifelse(input$direction.choice == 'ISO3.residence', 0.3, 1))
     
     # adds circles based on population density if appropriate view
-    if (input$direction.choice.line == 'ISO3.residence') {
+    if (input$direction.choice == 'ISO3.residence') {
       map <- map %>% 
         add_markers(data=world.map, x=~LON.x, y=~LAT.x, text=~paste0(NAME.x, ': ', Value),
                     size=~Value, hoverinfo='text', alpha=0.5)
@@ -163,7 +163,7 @@ shinyServer(function(input, output) {
     direc <- ifelse(type,
            ifelse(input$direction.choice.color=='ISO3.residence', 
                   TRUE, FALSE),
-           ifelse(input$direction.choice.line=='ISO3.residence', 
+           ifelse(input$direction.choice=='ISO3.residence', 
                   FALSE, TRUE))
     
     # stat variables for data based on line or color view
@@ -208,7 +208,7 @@ shinyServer(function(input, output) {
       if (input$direction.choice == 'ISO3.origin'){
         data <- filter(data, Country...territory.of.asylum.residence == input$country.choice)
         data <- select(data, Year, Value)
-        } else {
+      } else {
         data <- filter(data, Origin == input$country.choice)
         data <- select(data, Year, Value)
       }

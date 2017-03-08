@@ -11,6 +11,16 @@ years <- 1960:2013
 pop.types <- levels(persons.data$Population.type)
 country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 
+# predefines common filters
+country.filter <- selectInput('country.choice', label='Country', 
+                              choice=c('All', country.names), selected=country.names[1])
+displacement.filter <- checkboxGroupInput('type.of.displacement', label='Type of Displacement', 
+                                          choice=pop.types, selected=pop.types)
+direction.filter <-  radioButtons("direction.choice", "Purpose", 
+                                  choices=list('Fleeing'='ISO3.residence', 'Residing'='ISO3.origin'),
+                                  selected='Fleeing')
+
+
 # main ui
 shinyUI(fluidPage(
   # creates title and page title
@@ -19,52 +29,61 @@ shinyUI(fluidPage(
   # creates multi-column layout
   sidebarLayout(
     sidebarPanel(
+      # shows help information for introduction entry users
+      conditionalPanel(
+        condition='input.tabPanel=="Introduction"',
+        helpText("Click on a tab to view specified visualization!")
+      ),
+      
       # shows interactive fitlers for map
       conditionalPanel(
         condition='input.tabPanel=="Map"',
         # universal panels
         selectInput('year.choice', label='Year', choice=rev(years)),
-        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
-                           selected=pop.types),
+        displacement.filter,
         conditionalPanel(
           condition='input.type == "color.map.plot"',
-          selectInput('direction.choice.color', label='Purpose', 
-                      choice=list('Fleeing'='ISO3.origin', 'Residing'='ISO3.residence'))),
+          radioButtons("direction.choice.color", "Purpose", 
+                       choices=c('Fleeing'='ISO3.origin', 'Residing'='ISO3.residence'),
+                       selected='Fleeing')),
                        
         # line plot panels
         conditionalPanel(
           condition='input.type == "line.map.plot"',
-          selectInput('direction.choice.line', label='Purpose', 
-                      choice=list('Fleeing'='ISO3.residence', 'Residing'='ISO3.origin')),
-          selectInput('country.choice', label='Country', choice=c('All', country.names), selected=country.names[1])),
+          direction.filter,
+          country.filter),
                        
-          # filter plot
-          selectInput('type', label='Map Type', choice=list('Color'='color.map.plot',
-                                                          'Line'='line.map.plot'))
+        # filter plot
+        selectInput('type', label='Map Type', choice=list('Color'='color.map.plot',
+                                                          'Line'='line.map.plot')),
+        
+        # displays where information came from
+        helpText("Data from UNHCR")
       ),
       
       # shows interactive fitlers for graph
       conditionalPanel(
         condition='input.tabPanel == "Graph"',
-        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types,
-                           selected=pop.types[1]),
-        selectInput('direction.choice', label='Purpose', 
-                    choice=list('Fleeing'='ISO3.residence', 'Accepting'='ISO3.origin')),
-        selectInput('country.choice', label='Country', 
-                    choice=c('All', country.names), selected=country.names[1]),
+        displacement.filter,
+        direction.filter,
+        country.filter,
         hr(),
+        
+        # displays where information came from
         helpText("Data from UNHCR")
       ),
       
       # shows interactive fitlers for table
       conditionalPanel(
         condition='input.tabPanel=="Table"',
-        selectInput('country.choice', label='Country', choice=c(country.names), selected=country.names[1]),
+        country.filter,
         selectInput('year.choice', label='Year', choice=c("All",rev(years))),
-        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
-                         selected=pop.types),
+        displacement.filter,
         radioButtons("table.type", "Table Information:", c("Origin","Residence")),
-        numericInput('row.num', label = 'Max Rows', value = 10, min = 0)
+        numericInput('row.num', label = 'Max Rows', value = 10, min = 0),
+        
+        # displays where information came from
+        helpText("Data from UNHCR")
       )
     ),
     
