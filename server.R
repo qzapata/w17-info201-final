@@ -223,8 +223,7 @@ shinyServer(function(input, output) {
   output$dygraph <- renderDygraph({
         dygraph(bar.filter(), main = paste("Displacement Graph for", input$country.graph)) %>%
           dySeries("Value", label = "Population") %>%
-          dyRangeSelector() %>%
-          dyOptions(stepPlot = TRUE)
+          dyRangeSelector()
   })
   
   # Creates filtered data frame as reactive variable
