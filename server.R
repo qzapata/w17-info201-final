@@ -201,15 +201,15 @@ shinyServer(function(input, output) {
   # create filtered data for line graph
   bar.filter <- reactive({
     data <- persons.data %>% 
-      filter(Population.type %in% input$type.of.displacement) %>% 
+      filter(Population.type %in% input$displacement.graph) %>% 
       mutate(ISO3.residence = iso.alpha(.$Country...territory.of.asylum.residence, n=3),
              ISO3.origin = iso.alpha(.$Origin, n=3)) 
     
-      if (input$direction.choice == 'ISO3.origin'){
-        data <- filter(data, Country...territory.of.asylum.residence == input$country.choice)
+      if (input$direction.graph == 'ISO3.origin'){
+        data <- filter(data, Country...territory.of.asylum.residence == input$country.graph)
         data <- select(data, Year, Value)
       } else {
-        data <- filter(data, Origin == input$country.choice)
+        data <- filter(data, Origin == input$country.graph)
         data <- select(data, Year, Value)
       }
 
@@ -218,7 +218,7 @@ shinyServer(function(input, output) {
   
   # Generate Dygraph for selected country
   output$dygraph <- renderDygraph({
-        dygraph(bar.filter(), main = paste("Displacement Graph for", input$country.choice)) %>%
+        dygraph(bar.filter(), main = paste("Displacement Graph for", input$country.graph)) %>%
           dySeries("Value", label = "Population") %>%
           dyRangeSelector() %>%
           dyOptions(stepPlot = TRUE)
@@ -228,14 +228,14 @@ shinyServer(function(input, output) {
   filtered.data <- reactive ({
     persons.filtered <- 
       if (input$table.type == "Residence") {
-        filter(persons.data, Country...territory.of.asylum.residence == input$country.choice)
+        filter(persons.data, Country...territory.of.asylum.residence == input$country.table)
       } else {
-        filter(persons.data, Origin == input$country.choice) 
+        filter(persons.data, Origin == input$country.table) 
       }
-    if (input$year.choice != "All") {
-      persons.filtered <- filter(persons.filtered, Year == input$year.choice)
+    if (input$year.table != "All") {
+      persons.filtered <- filter(persons.filtered, Year == input$year.table)
     }
-    persons.filtered <- filter(persons.filtered, Population.type %in% input$type.of.displacement) %>%
+    persons.filtered <- filter(persons.filtered, Population.type %in% input$displacement.table) %>%
                         arrange(desc(Value))
     if(nrow(persons.filtered) > input$row.num) {
       persons.filtered <- persons.filtered[0:input$row.num,]
