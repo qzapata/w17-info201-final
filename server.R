@@ -212,6 +212,9 @@ shinyServer(function(input, output) {
         data <- filter(data, Origin == input$country.graph)
         data <- select(data, Year, Value)
       }
+    data <- data %>% 
+      group_by(Year) %>% 
+      summarise(Value = sum(Value))
 
     return(data)
   })
