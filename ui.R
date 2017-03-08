@@ -2,6 +2,7 @@
 library('shiny')
 library('plotly')
 library('dygraphs')
+library('shinythemes')
 
 # imports data set
 persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
@@ -24,7 +25,7 @@ direction.filter <-  function(id) {radioButtons(id, "Purpose",
                      }
 
 # main ui
-shinyUI(fluidPage(
+shinyUI(fluidPage(theme=shinytheme("flatly"),
   # creates title and page title
   titlePanel(strong('UNHCR Displaced Persons Data'), windowTitle='UNHCR Displaced Persons Data'),
   h4('Team Kiwi'),
