@@ -12,13 +12,16 @@ pop.types <- levels(persons.data$Population.type)
 country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 
 # predefines common filters
-country.filter <- selectInput('country.choice', label='Country', 
+country.filter <- function(id) {selectInput(id, label='Country', 
                               choice=c('All', country.names), selected=country.names[1])
-displacement.filter <- checkboxGroupInput('type.of.displacement', label='Type of Displacement', 
+                  }
+displacement.filter <- function(id) {checkboxGroupInput(id, label='Type of Displacement', 
                                           choice=pop.types, selected=pop.types)
-direction.filter <-  radioButtons("direction.choice", "Purpose", 
+                       }
+direction.filter <-  function(id) {radioButtons(id, "Purpose", 
                                   choices=list('Fleeing'='ISO3.residence', 'Residing'='ISO3.origin'),
                                   selected='Fleeing')
+                     }
 
 # main ui
 shinyUI(fluidPage(
@@ -40,7 +43,7 @@ shinyUI(fluidPage(
         condition='input.tabPanel=="Map"',
         # universal panels
         selectInput('year.choice', label='Year', choice=rev(years)),
-        displacement.filter,
+        displacement.filter("type.of.displacement"),
         conditionalPanel(
           condition='input.type == "color.map.plot"',
           radioButtons("direction.choice.color", "Purpose", 
@@ -50,8 +53,9 @@ shinyUI(fluidPage(
         # line plot panels
         conditionalPanel(
           condition='input.type == "line.map.plot"',
-          direction.filter,
-          country.filter),
+          direction.filter("direction.choice"),
+          selectInput("country.choice", label='Country', choice=c('All', country.names), selected=country.names[1])
+          ),
                        
         # filter plot
         selectInput('type', label='Map Type', choice=list('Color'='color.map.plot',
@@ -64,9 +68,9 @@ shinyUI(fluidPage(
       # shows interactive fitlers for graph
       conditionalPanel(
         condition='input.tabPanel == "Graph"',
-        displacement.filter,
-        direction.filter,
-        country.filter,
+        displacement.filter("displacement.graph"),
+        direction.filter("direction.graph"),
+        country.filter("country.graph"),
         hr(),
         
         # displays where information came from
@@ -76,9 +80,9 @@ shinyUI(fluidPage(
       # shows interactive fitlers for table
       conditionalPanel(
         condition='input.tabPanel=="Table"',
-        country.filter,
-        selectInput('year.choice', label='Year', choice=c("All",rev(years))),
-        displacement.filter,
+        country.filter("country.table"),
+        selectInput('year.table', label='Year', choice=c("All",rev(years))),
+        displacement.filter("displacement.table"),
         radioButtons("table.type", "Table Information:", c("Origin","Residence")),
         numericInput('row.num', label = 'Max Rows', value = 10, min = 0),
         
