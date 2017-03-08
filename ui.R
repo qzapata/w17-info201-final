@@ -102,7 +102,16 @@ shinyUI(fluidPage(
                                     immigration trends over time, and many other questions they might have while exploring the data. "),
                                   br("The data used in this application is from the United Nations Refugee Agency. UNHCR originally collected this data while helping on
                                      refugees, asylum-seekers, and people who are displaced since 1951. The data collects data based
-                                     on about 200 countries both as destinations and origins for displaced people. ")),
+                                     on about 200 countries both as destinations and origins for displaced people. "),
+                                  br(strong("Types of Displacement Glossary")),
+                                  p("Asylum-seekers: Someone whose request for sanctuary has yet to be processed."),
+                                  p("Internally displaced persons: People who have not crossed a border to find safety."),
+                                  p("Refugees (incl. refugee-like situations): People fleeing conflict or persecution."),
+                                  p("Returned IDPs: Internally displaced persons who return to their areas of origin with the protection of UNHCR and assistance activities."),
+                                  p("Returnees: Displaced people returning home after time in exile."),
+                                  p("Stateless: People who are denied a nationality."),
+                                  p("Others of concern: Individuals who do not fall under any of the other groups, fall under UNHCR protection.")
+                ),
         tabPanel('Map',
                  plotlyOutput('map.plot'),
                  textOutput('map.description'),
