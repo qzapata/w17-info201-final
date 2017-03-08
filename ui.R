@@ -3,21 +3,23 @@ library('shiny')
 library('plotly')
 library('dygraphs')
 
-# import data
+# imports data set
 persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
 
-# Variables for tab
+# variables to use -- some years excluded because too little data available
+years <- 1960:2013
 pop.types <- levels(persons.data$Population.type)
 country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 
+# predefines common filters
+country.filter <- selectInput('country.choice', label='Country', 
+                              choice=c('All', country.names), selected=country.names[1])
+displacement.filter <- checkboxGroupInput('type.of.displacement', label='Type of Displacement', 
+                                          choice=pop.types, selected=pop.types)
+direction.filter <-  radioButtons("direction.choice", "Purpose", 
+                                  choices=list('Fleeing'='ISO3.residence', 'Residing'='ISO3.origin'),
+                                  selected='Fleeing')
 
-# import data set
-persons.data <- read.csv('data/unhcr_popstats_export_time_series_all_data.csv')
-
-# variables to use
-years <- 1951:2013
-pop.types <- levels(persons.data$Population.type)
-country.names <- levels(persons.data$Country...territory.of.asylum.residence)
 
 # main ui
 shinyUI(fluidPage(
@@ -27,24 +29,61 @@ shinyUI(fluidPage(
   # creates multi-column layout
   sidebarLayout(
     sidebarPanel(
+      # shows help information for introduction entry users
+      conditionalPanel(
+        condition='input.tabPanel=="Introduction"',
+        helpText("Click on a tab to view specified visualization!")
+      ),
+      
+      # shows interactive fitlers for map
+      conditionalPanel(
+        condition='input.tabPanel=="Map"',
+        # universal panels
+        selectInput('year.choice', label='Year', choice=rev(years)),
+        displacement.filter,
+        conditionalPanel(
+          condition='input.type == "color.map.plot"',
+          radioButtons("direction.choice.color", "Purpose", 
+                       choices=c('Fleeing'='ISO3.origin', 'Residing'='ISO3.residence'),
+                       selected='Fleeing')),
+                       
+        # line plot panels
+        conditionalPanel(
+          condition='input.type == "line.map.plot"',
+          direction.filter,
+          country.filter),
+                       
+        # filter plot
+        selectInput('type', label='Map Type', choice=list('Color'='color.map.plot',
+                                                          'Line'='line.map.plot')),
+        
+        # displays where information came from
+        helpText("Data from UNHCR")
+      ),
+      
+      # shows interactive fitlers for graph
       conditionalPanel(
         condition='input.tabPanel == "Graph"',
-        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types,
-                           selected=pop.types[1]),
-        selectInput('direction.choice', label='Purpose', 
-                    choice=list('Fleeing'='ISO3.residence', 'Accepting'='ISO3.origin')),
-        selectInput('country.choice', label='Country', 
-                    choice=c('All', country.names), selected=country.names[1]),
+        displacement.filter,
+        direction.filter,
+        country.filter,
         hr(),
-        helpText("Data from UNHCR")),
+        
+        # displays where information came from
+        helpText("Data from UNHCR")
+      ),
+      
+      # shows interactive fitlers for table
       conditionalPanel(
         condition='input.tabPanel=="Table"',
-        selectInput('country.choice', label='Country', choice=c(country.names), selected=country.names[1]),
+        country.filter,
         selectInput('year.choice', label='Year', choice=c("All",rev(years))),
-        checkboxGroupInput('type.of.displacement', label='Type of Displacement', choice=pop.types, 
-                         selected=pop.types),
+        displacement.filter,
         radioButtons("table.type", "Table Information:", c("Origin","Residence")),
-        numericInput('row.num', label = 'Max Rows', value = 10, min = 0)
+        numericInput('row.num', label = 'Max Rows', value = 10, min = 0),
+        
+        # displays where information came from
+        helpText("Data from UNHCR")
       )
     ),
     
@@ -59,16 +98,20 @@ shinyUI(fluidPage(
                                     immigration trends over time, and many other questions they might have while exploring the data. "),
                                   br("The data used in this application is from the United Nations Refugee Agency. UNHCR originally collected this data while helping on
                                      refugees, asylum-seekers, and people who are displaced since 1951. The data collects data based
-                                     on about 200 countries both as destinations and origins for displaced people. ")
-       ) ,
-      tabPanel('Table',
-               p(" The following table includes information about where displaced persons are going and where they are coming from, arranged descendingly
-                 according to the number of people displaced:"),
-               textOutput('text'),
-               tableOutput('table')),
-      tabPanel('Graph', 
-               hr(), 
-               dygraphOutput("dygraph"))
+                                     on about 200 countries both as destinations and origins for displaced people. ")),
+        tabPanel('Map',
+                 plotlyOutput('map.plot'),
+                 textOutput('map.description'),
+                 conditionalPanel(condition='input.type == "color.map.plot"',
+                                  verbatimTextOutput('click.text'))),
+        tabPanel('Table',
+                 p(" The following table includes information about where displaced persons are going and where they are coming from, arranged descendingly
+                   according to the number of people displaced:"),
+                 textOutput('text'),
+                 tableOutput('table')),
+        tabPanel('Graph', 
+                 hr(), 
+                 dygraphOutput("dygraph"))
       )
     )
   )
