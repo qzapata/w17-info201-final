@@ -20,11 +20,11 @@ direction.filter <-  radioButtons("direction.choice", "Purpose",
                                   choices=list('Fleeing'='ISO3.residence', 'Residing'='ISO3.origin'),
                                   selected='Fleeing')
 
-
 # main ui
 shinyUI(fluidPage(
   # creates title and page title
-  titlePanel(strong('Team Kiwi'), windowTitle='Team Kiwi'),
+  titlePanel(strong('UNHCR Displaced Persons Data'), windowTitle='UNHCR Displaced Persons Data'),
+  h4('Team Kiwi'),
   
   # creates multi-column layout
   sidebarLayout(
