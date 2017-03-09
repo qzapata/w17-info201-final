@@ -107,6 +107,9 @@ shinyServer(function(input, output) {
   
   # creates line map view
   line.map.plot <- reactive({
+    # check that operation can be run
+    validate(need(iso.alpha(input$country.choice, n=3) %in% map.filter()[,input$direction.choice], 
+                  message='Country data not available for that year'))
     # modify data set
     world.map <- map.filter() %>% 
       group_by_(input$direction.choice) %>% 
@@ -126,6 +129,9 @@ shinyServer(function(input, output) {
                            by=c('ISO3.residence'='ISO3.residence', 'ISO3.origin'='ISO3.origin')) %>% 
       filter(ISO3.origin != ISO3.residence) %>% 
       mutate(id = seq_len(nrow(.)))
+    
+    # check if selected country is too small
+    validate(need(nrow(world.map) > 0, message='Country data not available for that year'))
     
     # stores world.data in reactive variable
     breakdown$df <- world.map

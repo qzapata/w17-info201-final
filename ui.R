@@ -59,7 +59,7 @@ shinyUI(fluidPage(theme=shinytheme("flatly"),
           ),
                        
         # filter plot
-        selectInput('type', label='Map Type', choice=list('Color'='color.map.plot',
+        selectInput('type', label='Map Type', choice=list('Chloropleth'='color.map.plot',
                                                           'Line'='line.map.plot')),
         
         # displays where information came from
