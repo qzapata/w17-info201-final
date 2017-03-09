@@ -206,6 +206,7 @@ shinyServer(function(input, output) {
   
   # create filtered data for line graph
   bar.filter <- reactive({
+    validate(need(input$displacement.graph, 'Please choose at least one kind of displacement'))
     data <- persons.data %>% 
       filter(Population.type %in% input$displacement.graph) %>% 
       mutate(ISO3.residence = iso.alpha(.$Country...territory.of.asylum.residence, n=3),
@@ -227,9 +228,9 @@ shinyServer(function(input, output) {
   
   # Generate Dygraph for selected country
   output$dygraph <- renderDygraph({
-        dygraph(bar.filter(), main = paste("Displacement Graph for", input$country.graph)) %>%
-          dySeries("Value", label = "Population") %>%
-          dyRangeSelector()
+    dygraph(bar.filter(), main = paste("Displacement Graph for", input$country.graph)) %>%
+      dySeries("Value", label = "Population") %>%
+      dyRangeSelector()
   })
   
   # Creates filtered data frame as reactive variable
